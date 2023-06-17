@@ -1,11 +1,18 @@
 import { Request, Response } from "express";
 import { Task } from "./tasks.entity";
 import { httpStatus } from "../../utils/status";
+import { ITasks } from "../../Interfaces/Tasks";
 
 export interface TaskModelInterface {
-  getAllTasks: () => Promise<Task[]>;
-  createTask: (task: Task) => Promise<Task>;
-  updateTask: (task: Task) => {};
+  getAllTasks: () => Promise<ITasks[]>;
+  createTask: (data: {
+    description: string;
+    image: string;
+    isCompleted: boolean;
+    title: string;
+    userId: number;
+  }) => {};
+  updateTask: (task: ITasks) => {};
   deleteTask: (id: number) => {};
 }
 
@@ -30,14 +37,16 @@ export class TaskController {
 
   createTask = async (req: Request<any, any, Task>, res: any) => {
     const { description, id, image, isCompleted, title } = req.body;
+    const { userId } = req.params;
 
     try {
-      const task: Task = {
-        description: description,
-        id: id,
-        image: image,
-        isCompleted: isCompleted,
-        title: title,
+      const task = {
+        description,
+        id,
+        image,
+        isCompleted,
+        title,
+        userId: Number(userId),
       };
 
       const data = await this.model.createTask(task);
@@ -49,18 +58,19 @@ export class TaskController {
     }
   };
 
-  updateTask = async (req: Request<any, any, Task>, res: any) => {
+  updateTask = async (req: Request<any, any, ITasks>, res: any) => {
     const { description, image, isCompleted, title } = req.body;
     const { id } = req.params;
 
     try {
-      const task: Task = {
+      const task: ITasks = {
         description: description,
         id: id,
         image: image,
         isCompleted: isCompleted,
         title: title,
       };
+
       const data = this.model.updateTask(task);
       res.json({ data }).status(httpStatus.CREATED);
     } catch (err) {

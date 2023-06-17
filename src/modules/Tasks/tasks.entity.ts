@@ -1,6 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm";
+import { User } from "../User/user.entity";
 
-@Entity()
+@Entity("tasks")
 export class Task {
   @PrimaryGeneratedColumn()
   id!: number;
@@ -16,4 +23,8 @@ export class Task {
 
   @Column()
   image!: string;
+
+  @ManyToOne(() => User, (user) => user.tasks)
+  @JoinColumn({ name: "userId", referencedColumnName: "id" })
+  user!: User;
 }
