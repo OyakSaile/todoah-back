@@ -3,18 +3,17 @@ import { User } from "./user.entity";
 import { UserModel } from "./user.model";
 import { httpStatus } from "../../utils/status";
 import bcrypt from "bcrypt";
-import Joi from "joi";
 import { userSchema } from "../../validations/userSchema";
 import { IUpdateUser } from "./user.interfaces";
 
 export class UserController {
-  model: UserModel;
+  private model: UserModel;
 
   constructor() {
     this.model = new UserModel();
   }
 
-  getAllUsers = async (req: Request, res: Response) => {
+  getAllUsers = async (req: Request, res: Response): Promise<void> => {
     try {
       const users = await this.model.getAllUsers();
       res.json({ users });
@@ -26,7 +25,10 @@ export class UserController {
     }
   };
 
-  createUser = async (req: Request<any, any, User>, res: Response) => {
+  createUser = async (
+    req: Request<any, any, User>,
+    res: Response
+  ): Promise<void> => {
     try {
       const { email, name, password, phone_number } = req.body;
 
@@ -58,37 +60,28 @@ export class UserController {
   };
 
   updateUser = async (req: Request<any, any, IUpdateUser>, res: Response) => {
-    try {
-      const { email, password, phone_number, name } = req.body;
-      const { id } = req.params;
+    const { email, password, phone_number, name } = req.body;
+    const { id } = req.params;
 
-      const { error } = await userSchema.validateAsync({
-        email,
-        phone_number,
-        password,
-        name,
-      });
+    await userSchema.validateAsync({
+      email,
+      phone_number,
+      password,
+      name,
+    });
 
-      if (error) {
-        throw new Error(error.message);
-      }
+    const cryptedPassword = await bcrypt.hash(password, 13);
 
-      const cryptedPassword = await bcrypt.hash(password, 13);
+    const user = {
+      email,
+      name,
+      phone_number,
+      password: cryptedPassword,
+      userId: id,
+    };
 
-      const user = {
-        email,
-        name,
-        phone_number,
-        password: cryptedPassword,
-        userId: id,
-      };
-
-      const data = await this.model.updateUser(user);
-      res.json({ data }).status(httpStatus.CREATED);
-    } catch (err: any) {
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).send("Error updating user:");
-      console.error(err);
-    }
+    const data = await this.model.updateUser(user);
+    res.status(httpStatus.CREATED).json({ data });
   };
 
   deleteUser = async (req: Request, res: Response) => {

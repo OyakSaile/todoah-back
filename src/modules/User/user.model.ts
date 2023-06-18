@@ -25,7 +25,7 @@ export class UserModel implements IUserController {
     });
 
     if (verifyEmailExists) {
-      createError("Email already exists", httpStatus.CONFLICT);
+      return createError("Email already exists", httpStatus.CONFLICT);
     }
 
     const user = new User();
@@ -43,18 +43,15 @@ export class UserModel implements IUserController {
     const userToUpdate = await userRepository.findOneBy({ id: data.userId });
 
     if (!userToUpdate) {
-      createError("User not found", httpStatus.NOT_FOUND);
+      return createError("User not found", httpStatus.NOT_FOUND);
     }
 
-    if (userToUpdate) {
-      userToUpdate.email = data.email;
-      userToUpdate.name = data.name;
-      userToUpdate.password = data.password;
-      userToUpdate.phone_number = data.phone_number;
+    userToUpdate.email = data.email;
+    userToUpdate.name = data.name;
+    userToUpdate.password = data.password;
+    userToUpdate.phone_number = data.phone_number;
 
-      const userUpdated = await AppDataSource.manager.save(userToUpdate);
-      return userUpdated;
-    }
+    return await AppDataSource.manager.save(userToUpdate);
   };
 
   deleteUser = async (id: number): Promise<string> => {
@@ -62,13 +59,12 @@ export class UserModel implements IUserController {
     const userToDelete = await userRepository.findOneBy({ id });
 
     if (!userToDelete) {
-      createError("User not found", httpStatus.NOT_FOUND);
+      return createError("User not found", httpStatus.NOT_FOUND);
     }
 
     // Remova o usuário apenas se o objeto userToDelete não for nulo
-    if (userToDelete) {
-      await userRepository.remove(userToDelete);
-    }
+
+    await userRepository.remove(userToDelete);
 
     return `User deleted with ID ${id}`;
   };
